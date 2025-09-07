@@ -1,3 +1,93 @@
 
-# Ignore nested libs in app folders
+# Foundry
+lib/
+out/
+cache/
+broadcast/
+
+# Ignore nested libs in app folders  
 smart-contracts/*/lib/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.testnet
+.env.mainnet
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Coverage reports
+coverage/
+lcov.info
+coverage.json
+
+# Gas reports
+gas-report.txt
+
+# Deployment artifacts
+deployments/
+artifacts/
+
+# Temporary files
+tmp/
+temp/
+
+# Build artifacts
+dist/
+build/
+
+# Documentation build
+docs/_build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Rust
+target/
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Backup files
+*.bak
+*.backup
+
+# Sensitive data
+private-keys.txt
+mnemonic.txt
+secrets.json
+
+# Local development
+.local/
+.cache/
