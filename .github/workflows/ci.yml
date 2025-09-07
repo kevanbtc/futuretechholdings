@@ -1,16 +1,72 @@
-name: fth-gold-ci
-on: { push: { branches: [ main ] }, pull_request: { branches: [ main ] } }
+name: FTH Gold CI/CD
+on: 
+  push: 
+    branches: [main, develop]
+  pull_request: 
+    branches: [main, develop]
+
+env:
+  FOUNDRY_PROFILE: default
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with: { version: nightly }
-      - name: Build & Test
+        with:
+          version: nightly
+
+      - name: Show tool versions
+        run: |
+          forge --version
+          cast --version
+          anvil --version
+
+      - name: Install dependencies (root level)
+        run: |
+          forge install --no-commit
+          git submodule update --init --recursive
+
+      - name: Build contracts
         working-directory: smart-contracts/fth-gold
         run: |
-          forge install OpenZeppelin/openzeppelin-contracts@v5.0.2 --no-commit
-          forge build
-          forge test -vv
+          forge build --sizes
+
+      - name: Run tests
+        working-directory: smart-contracts/fth-gold
+        run: |
+          forge test -vvv
+
+      - name: Run coverage
+        working-directory: smart-contracts/fth-gold
+        run: |
+          forge coverage --report lcov
+
+      - name: Check contract sizes
+        working-directory: smart-contracts/fth-gold
+        run: |
+          forge build --sizes
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install dependencies
+        run: forge install --no-commit
+
+      - name: Run static analysis
+        working-directory: smart-contracts/fth-gold
+        run: |
+          forge snapshot --check
+          forge fmt --check

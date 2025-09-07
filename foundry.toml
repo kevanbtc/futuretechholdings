@@ -1,5 +1,25 @@
 [profile.default]
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 200
 libs = ["lib"]
+auto_detect_remappings = true
 remappings = [
-  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+  "forge-std/=lib/forge-std/src/"
 ]
+
+# Test configuration
+[profile.default.fuzz]
+runs = 1000
+max_test_rejects = 65536
+
+# Gas reporting
+[profile.default.gas_reports]
+disable_gas_reports = false
+gas_reports = ["*"]
+
+# Coverage
+[profile.default.coverage]
+exclude = ["test/**", "script/**"]
