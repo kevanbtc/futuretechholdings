@@ -1,0 +1,3 @@
+
+# Ignore nested libs in app folders
+smart-contracts/*/lib/
