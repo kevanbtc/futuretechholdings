@@ -2,5 +2,6 @@
 libs = ["../../lib"]
 remappings = [
   "@openzeppelin/contracts/=../../lib/openzeppelin-contracts/contracts/",
+  "openzeppelin-contracts/=../../lib/openzeppelin-contracts/",
   "forge-std/=../../lib/forge-std/src/"
 ]
