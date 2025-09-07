@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "programName": "FTH-G Gold Program",
+  "economics": {
+    "lockPeriodDays": 150,
+    "issuePrice": "$20,000 USD per kg (fixed)",
+    "monthlyPayoutTarget": "10% of principal",
+    "distributionFrequencyDays": 30,
+    "redemptionFeeBps": 100,
+    "storageFee": "0% (no ongoing storage fees)"
+  },
+  "coverage": {
+    "minCoverageBps": 12500,
+    "targetCoverageBps": 14000,
+    "porStalenessMaxHours": 24,
+    "priceDeviationMaxBps": 200
+  },
+  "redemption": {
+    "navPricing": "XAU/USD oracle mid price minus fees",
+    "settlementDays": 3,
+    "cashRedemption": "USDT at NAV pricing",
+    "physicalRedemption": "1kg bars via partner dealers with KYC verification"
+  },
+  "circuitBreakers": {
+    "onCoverageBreach": "Pause minting; maintain redemptions within budget; publish incident report",
+    "onOracleStale": "Pause all value-moving operations; maintain emergency redemptions; restore within 24h",
+    "onPriceShock": "Enable redemption throttling; review parameters; publish market conditions report"
+  },
+  "governance": {
+    "multisig": "Gnosis Safe with 3/5 threshold",
+    "timelockHours": 48,
+    "upgradeProcess": "Timelock + multisig approval for all parameter changes",
+    "incidentResponse": "Emergency pause capability with immediate notification"
+  },
+  "compliance": {
+    "walletLevelKYC": true,
+    "soulboundCredentials": "Non-transferable KYC passes required for all operations",
+    "sanctionsScreening": "Continuous monitoring against OFAC and global sanctions lists",
+    "jurisdictionSupport": ["UAE/DMCC", "US/Reg D", "EU/MiCA", "CH/FINMA", "SG/MAS"],
+    "accreditedInvestorsOnly": true
+  },
+  "riskManagement": {
+    "deficitAccounting": "Enabled - shortfalls tracked transparently",
+    "dailyRedemptionCap": "5% of total supply or budget limit, whichever is lower",
+    "reserveBuffer": "Minimum 125% coverage with 140% target",
+    "operationalControls": "Monthly funding reports, quarterly audits, continuous monitoring"
+  }
+}
