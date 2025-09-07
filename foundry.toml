@@ -14,12 +14,3 @@ remappings = [
 [profile.default.fuzz]
 runs = 1000
 max_test_rejects = 65536
-
-# Gas reporting
-[profile.default.gas_reports]
-disable_gas_reports = false
-gas_reports = ["*"]
-
-# Coverage
-[profile.default.coverage]
-exclude = ["test/**", "script/**"]

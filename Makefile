@@ -16,7 +16,7 @@ CONTRACT_DIR := smart-contracts/fth-gold
 
 install: ## Install all dependencies
 	@echo "Installing Foundry dependencies..."
-	forge install --no-commit
+	forge install
 	git submodule update --init --recursive
 	@echo "Dependencies installed successfully."
 
