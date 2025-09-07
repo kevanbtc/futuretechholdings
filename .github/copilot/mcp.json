@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "type": "local",
+      "command": "mcp-server-filesystem",
+      "args": [],
+      "env": {
+        "MCP_FS_ROOTS": "${{WORKSPACE}}"
+      },
+      "tools": ["read_file", "list_directory", "stat"]
+    },
+    "shell": {
+      "type": "local",
+      "command": "mcp-server-shell",
+      "args": [],
+      "env": {
+        "MCP_SHELL_ALLOWED_COMMANDS": "git,forge,npm,pnpm,node,python,pip,pytest,ls,cat,grep,sed,awk,echo,sh,bash",
+        "MCP_SHELL_WORKING_DIR": "${{WORKSPACE}}"
+      },
+      "tools": ["exec"]
+    },
+    "fetch": {
+      "type": "local",
+      "command": "mcp-server-fetch",
+      "args": [],
+      "env": {
+        "MCP_FETCH_ALLOW": "https://github.com,https://api.github.com,https://objects.githubusercontent.com,https://raw.githubusercontent.com,https://registry.npmjs.org,https://npmjs.com,https://pypi.org,https://files.pythonhosted.org,https://crates.io,https://static.rust-lang.org,https://static.crates.io,https://registry-1.docker.io,https://ghcr.io,https://quay.io"
+      },
+      "tools": ["fetch"]
+    },
+    "github": {
+      "type": "local",
+      "command": "mcp-server-github",
+      "args": [],
+      "env": {
+        "GITHUB_TOKEN": "${{SECRETS.GITHUB_TOKEN}}",
+        "GITHUB_REPO": "${{REPO}}"
+      },
+      "tools": ["*"]
+    }
+  }
+}
