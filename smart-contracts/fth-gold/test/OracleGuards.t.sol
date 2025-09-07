@@ -17,18 +17,18 @@ contract OracleGuardsTest is Test {
     MockPoRAdapter por;
 
     address admin = address(0xA11CE);
-    address user  = address(0xB0B);
+    address user = address(0xB0B);
 
     function setUp() public {
         vm.startPrank(admin);
 
-        usdt    = new MockUSDT();
-        fthg    = new FTHGold(admin);
+        usdt = new MockUSDT();
+        fthg = new FTHGold(admin);
         receipt = new FTHStakeReceipt(admin);
-        por     = new MockPoRAdapter();
+        por = new MockPoRAdapter();
 
         // ctor: (address admin, IERC20 usdt, FTHGold fthg, FTHStakeReceipt receipt, IPoRAdapter por)
-        locker  = new StakeLocker(admin, IERC20(address(usdt)), fthg, receipt, IPoRAdapter(address(por)));
+        locker = new StakeLocker(admin, IERC20(address(usdt)), fthg, receipt, IPoRAdapter(address(por)));
 
         // roles so convert paths can mint/burn if needed in future tests
         fthg.grantRole(fthg.ISSUER_ROLE(), address(locker));

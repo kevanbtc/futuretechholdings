@@ -19,18 +19,18 @@ contract StakeTest is Test {
     IPoRAdapter por;
 
     address admin = address(0xA11CE);
-    address user  = address(0xB0B);
+    address user = address(0xB0B);
 
     function setUp() public {
         vm.startPrank(admin);
 
-        usdt    = new MockUSDT();
-        gold    = new FTHGold(admin);         // ctor(address admin)
+        usdt = new MockUSDT();
+        gold = new FTHGold(admin); // ctor(address admin)
         receipt = new FTHStakeReceipt(admin); // ctor(address admin)
-        por     = new MockPoRAdapter();
+        por = new MockPoRAdapter();
 
         // ctor: (address admin, IERC20 usdt, FTHGold fthg, FTHStakeReceipt receipt, IPoRAdapter _por)
-        locker  = new StakeLocker(admin, IERC20(address(usdt)), gold, receipt, por);
+        locker = new StakeLocker(admin, IERC20(address(usdt)), gold, receipt, por);
 
         // Allow locker to mint/burn where needed
         gold.grantRole(gold.ISSUER_ROLE(), address(locker));

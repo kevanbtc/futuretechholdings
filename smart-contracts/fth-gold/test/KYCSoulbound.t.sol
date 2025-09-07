@@ -7,7 +7,7 @@ import {KYCSoulbound} from "../contracts/compliance/KYCSoulbound.sol";
 contract KYCSoulboundTest is Test {
     KYCSoulbound kyc;
     address admin = address(0xA11CE);
-    address user  = address(0xB0B);
+    address user = address(0xB0B);
 
     function setUp() public {
         vm.startPrank(admin);

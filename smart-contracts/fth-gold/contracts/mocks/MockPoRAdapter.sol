@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {IPoRAdapter} from "../oracle/ChainlinkPoRAdapter.sol";
 
 contract MockPoRAdapter is IPoRAdapter {
-    bool    private _healthy;
+    bool private _healthy;
     uint256 private _totalVaultedKg;
     uint256 private _lastUpdate;
 

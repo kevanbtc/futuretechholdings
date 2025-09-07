@@ -9,14 +9,14 @@ contract KYCSoulbound is ERC721, AccessRoles {
     struct KYCData {
         bytes32 idHash;
         bytes32 passportHash;
-        uint48  expiry;      // unix seconds
-        uint16  juris;       // jurisdiction code (e.g., 840 = US)
-        bool    accredited;
+        uint48 expiry; // unix seconds
+        uint16 juris; // jurisdiction code (e.g., 840 = US)
+        bool accredited;
     }
 
     // tokenId == uint160(holder)
     mapping(address => KYCData) public kycOf;
-    mapping(address => bool)    public locked; // soulbound flag
+    mapping(address => bool) public locked; // soulbound flag
 
     constructor(address admin) ERC721("FTH KYC Pass", "KYC-PASS") {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -52,20 +52,13 @@ contract KYCSoulbound is ERC721, AccessRoles {
     /// - Allow mint (no previous owner)
     /// - Block transfers
     /// - Allow burn when issuer/admin is either the token owner (auth) OR the caller (_msgSender())
-    function _update(address to, uint256 id, address auth)
-        internal
-        override
-        returns (address)
-    {
+    function _update(address to, uint256 id, address auth) internal override returns (address) {
         address prevOwner = _ownerOf(id);
         if (prevOwner != address(0)) {
             if (to == address(0)) {
                 address caller = _msgSender();
-                bool canBurn =
-                    hasRole(KYC_ISSUER_ROLE, auth) ||
-                    hasRole(DEFAULT_ADMIN_ROLE, auth) ||
-                    hasRole(KYC_ISSUER_ROLE, caller) ||
-                    hasRole(DEFAULT_ADMIN_ROLE, caller);
+                bool canBurn = hasRole(KYC_ISSUER_ROLE, auth) || hasRole(DEFAULT_ADMIN_ROLE, auth)
+                    || hasRole(KYC_ISSUER_ROLE, caller) || hasRole(DEFAULT_ADMIN_ROLE, caller);
                 require(canBurn, "KYC: only issuer/admin can burn");
             } else {
                 revert("KYC: soulbound");
@@ -80,12 +73,7 @@ contract KYCSoulbound is ERC721, AccessRoles {
         return exists && d.expiry >= block.timestamp;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, AccessControl)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
