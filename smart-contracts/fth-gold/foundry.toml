@@ -1,6 +1,8 @@
 [profile.default]
 libs = ["../../lib"]
 auto_detect_remappings = false
+solc = "/usr/local/bin/solc"
+offline = true
 remappings = [
   "@openzeppelin/contracts/=../../lib/openzeppelin-contracts/contracts/",
   "openzeppelin-contracts/=../../lib/openzeppelin-contracts/",
