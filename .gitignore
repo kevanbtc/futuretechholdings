@@ -1,3 +1,60 @@
 
+# Dependencies
+node_modules/
+lib/
+
+# Build artifacts
+out/
+cache/
+broadcast/
+docs/build/
+
+# Coverage reports
+lcov.info
+coverage/
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Foundry
+smart-contracts/*/cache/
+smart-contracts/*/out/
+smart-contracts/*/broadcast/
+
+# Gas snapshots
+.gas-snapshot
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Logs
+*.log
+anvil.log
+
+# Compiled solidity
+*.abi
+*.bin
+
+# Package managers
+package-lock.json
+yarn.lock
+
+# Distribution
+dist/
+build/
+
 # Ignore nested libs in app folders
 smart-contracts/*/lib/
