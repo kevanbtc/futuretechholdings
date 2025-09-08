@@ -3,3 +3,6 @@ cache/
 lib/
 .env
 coverage/
+
+# local secrets
+.env

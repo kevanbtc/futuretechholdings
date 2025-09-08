@@ -1,77 +1,107 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {AccessRoles} from "../access/AccessRoles.sol";
-import {FTHGold} from "../tokens/FTHGold.sol";
-import {FTHStakeReceipt} from "../tokens/FTHStakeReceipt.sol";
-import {IPoRAdapter} from "../oracle/ChainlinkPoRAdapter.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {FTHStakeReceipt} from "../token/FTHStakeReceipt.sol";
+import {FTHG} from "../token/FTHG.sol";
+import {IOracleManager} from "../interfaces/IOracleManager.sol";
+import {IKYCSBT} from "../interfaces/IKYCSBT.sol";
+import {ComplianceRegistry} from "../compliance/ComplianceRegistry.sol";
+import {Parameters} from "../config/Parameters.sol";
+import {Errors} from "../utils/Errors.sol";
 
-interface IERC20 {
-    function transferFrom(address, address, uint256) external returns (bool);
-}
+contract StakeLocker is AccessControl {
+    struct Position { uint128 kg; uint64 start; uint64 unlock; bool converted; }
 
-contract StakeLocker is AccessRoles {
-    IERC20 public immutable USDT;
-    FTHGold public immutable FTHG;
-    FTHStakeReceipt public immutable RECEIPT;
-    IPoRAdapter public por;
+    IERC20 public immutable USDT;  // 6-dec
+    FTHStakeReceipt public immutable SR;
+    FTHG   public immutable FTH;
+    IOracleManager public immutable oracle;
+    IKYCSBT public immutable sbt;
+    ComplianceRegistry public immutable compliance;
 
-    uint256 public constant LOCK_SECONDS = 150 days;
-    uint256 public coverageBps = 12500;
+    mapping(address => Position) public positions;
+    uint256 public totalKgStaked;
+    bool public paused;
 
-    struct Pos {
-        uint128 amountKg;
-        uint48 start;
-        uint48 unlock;
-    }
+    bytes32 public constant DESK_ROLE = keccak256("DESK");
 
-    mapping(address => Pos) public position;
-
-    event Staked(address indexed user, uint256 usdtPaid, uint256 kg);
+    event Staked(address indexed user, uint256 kg, uint256 usdtPaid);
     event Converted(address indexed user, uint256 kg);
 
-    constructor(address admin, IERC20 usdt, FTHGold fthg, FTHStakeReceipt receipt, IPoRAdapter _por) {
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        _grantRole(GUARDIAN_ROLE, admin);
-        USDT = usdt;
-        FTHG = fthg;
-        RECEIPT = receipt;
-        por = _por;
+    constructor(
+        IERC20 usdt, 
+        FTHStakeReceipt sr, 
+        FTHG fth, 
+        IOracleManager o, 
+        IKYCSBT s,
+        ComplianceRegistry comp
+    ) {
+        USDT = usdt; 
+        SR = sr; 
+        FTH = fth; 
+        oracle = o; 
+        sbt = s;
+        compliance = comp;
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender); 
     }
 
-    function stake1Kg(uint256 usdtAmount) external {
-        require(usdtAmount > 0, "bad amount");
-        require(position[msg.sender].amountKg == 0, "already");
-        bool ok = USDT.transferFrom(msg.sender, address(this), usdtAmount);
-        require(ok, "USDT transferFrom failed");
-        position[msg.sender] =
-            Pos({amountKg: 1, start: uint48(block.timestamp), unlock: uint48(block.timestamp + LOCK_SECONDS)});
-        RECEIPT.mint(msg.sender, 1e18);
-        emit Staked(msg.sender, usdtAmount, 1);
+    function pause(bool p) external onlyRole(DEFAULT_ADMIN_ROLE) { 
+        paused = p; 
     }
 
+    /// @notice Stake exactly @ $20k/kg fixed price; mints non-transferable SR.
+    function stakeKg(uint256 kg) external {
+        if (paused) revert Errors.SystemPaused();
+        if (!sbt.isValid(msg.sender)) revert Errors.SBTInvalid(msg.sender);
+        if (!compliance.isEligible(msg.sender, compliance.MARKET_UAE_DMCC())) {
+            revert Errors.NotEligible(msg.sender, compliance.MARKET_UAE_DMCC());
+        }
+        (uint256 cov, uint256 t) = oracle.coverageRatioBps();
+        _fresh(t); 
+        _coverage(cov);
+
+        Position storage p = positions[msg.sender];
+        require(p.kg == 0, "one position per wallet in MVP");
+
+        uint256 cost = kg * Parameters.FIXED_ISSUE_PRICE_USD_PER_KG; // USDT 6-dec already
+        require(USDT.transferFrom(msg.sender, address(this), cost), "USDT xfer fail");
+
+        p.kg = uint128(kg);
+        p.start = uint64(block.timestamp);
+        p.unlock = uint64(block.timestamp + Parameters.LOCK_SECONDS);
+
+        SR.mint(msg.sender, kg * 1e18);
+        totalKgStaked += kg;
+
+        emit Staked(msg.sender, kg, cost);
+    }
+
+    /// @notice After 150 days, convert SR -> FTHG 1:1 kg, gated by coverage.
     function convert() external {
-        Pos memory p = position[msg.sender];
-        require(p.amountKg > 0, "no pos");
+        if (paused) revert Errors.SystemPaused();
+        Position storage p = positions[msg.sender];
+        require(p.kg > 0 && !p.converted, "no pos");
         require(block.timestamp >= p.unlock, "locked");
-        require(por.isHealthy(), "por stale");
 
-        uint256 outstanding = FTHG.totalSupply() / 1e18;
-        require((por.totalVaultedKg() * 1e4) / (outstanding + 1) >= coverageBps, "coverage");
+        (uint256 cov, uint256 t) = oracle.coverageRatioBps();
+        _fresh(t); 
+        _coverage(cov);
 
-        // Allow burn on non-transferable receipt tokens
-        bool was = RECEIPT.transferable(msg.sender);
-        if (!was) RECEIPT.setTransferable(msg.sender, true);
-        RECEIPT.burn(msg.sender, 1e18);
-        if (!was) RECEIPT.setTransferable(msg.sender, false);
-
-        FTHG.mint(msg.sender, 1);
-        delete position[msg.sender];
-        emit Converted(msg.sender, 1);
+        p.converted = true;
+        SR.burn(msg.sender, uint256(p.kg) * 1e18);
+        FTH.mint(msg.sender, uint256(p.kg) * 1e18);
+        emit Converted(msg.sender, p.kg);
     }
 
-    function setCoverage(uint256 bps) external onlyRole(GUARDIAN_ROLE) {
-        require(bps >= 10000, "min=100%");
-        coverageBps = bps;
+    function _fresh(uint256 updatedAt) internal view {
+        if (block.timestamp - updatedAt > Parameters.ORACLE_STALENESS_MAX)
+            revert Errors.OracleStale(updatedAt, Parameters.ORACLE_STALENESS_MAX);
+    }
+
+    function _coverage(uint256 bps) internal pure {
+        if (bps < Parameters.MIN_COVERAGE_BPS) 
+            revert Errors.CoverageTooLow(bps, Parameters.MIN_COVERAGE_BPS);
     }
 }
